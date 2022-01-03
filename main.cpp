@@ -21,11 +21,11 @@ float rand01(int resolution = 10000)
     return g_randomGenerator() % resolution / float(resolution); //basic, could be improved
 }
 
-int evaluate(const std::vector<int> &individual, std::vector<std::vector<int> > &costs,int size)
+int evaluate(const std::vector<int> &individual, std::vector<std::vector<int> > &len,int size)
 {
 	int indCost = 0;
 	for(int i = 1; i < size; i++)
-		indCost += costs[individual[i]][individual[i-1]];
+		indCost += len[individual[i]][individual[i-1]];
 	return indCost;	
 }
 
