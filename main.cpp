@@ -1,21 +1,77 @@
 #include <iostream>
-#include<random>
-#include<vector>
-#include<math.h>
+#include <random>
+#include <vector>
+#include <math.h>
 #include <algorithm>
 #include <fstream>
 #include <stdio.h>
+#include <chrono>
+#include <utility>
+#include <functional>
+#include <numeric>
+#include <string>
 
 std::mt19937_64 g_randomGenerator;
 float pi = 4 * atan(1);
+double mutationChance = 0.01;
+
+struct point {
+    double x, y;
+};
+
+std::vector<point> graph;
+
+void getData(std::string path)
+{
+    std::ifstream input_file(path);
+    if (!input_file.is_open()) {
+        std::cerr << "Could not open the file - " << path << std::endl;
+    }
+
+    std::string line;
+    while (line != "NODE_COORD_SECTION") {
+        std::getline(input_file, line);
+    }
+    std::getline(input_file, line);
+    while (line != "EOF") {
+        int i = 0;
+        while (line[i] != ' ') i++;
+        i++;
+        std::string x_str, y_str;
+
+        while (line[i] != ' ') {
+            x_str += line[i++];
+        }
+        point vertex;
+        vertex.x = atof(x_str.c_str());
+
+        i++;
+
+        while (i < line.size()) {
+            y_str += line[i++];
+        }
+        vertex.y = atof(y_str.c_str());
+
+        graph.push_back(vertex);
+
+        std::getline(input_file, line);
+    }
+
+    input_file.close();
+}
 
 template <class T>
 void const printVec(const std::vector<T> vec,size_t l , const char* end = "\n"){;}
-std::vector<int> generateRandomVector(int size){
-	//De facut
-	//******************************
 
+std::vector<point> generateRandomVector()
+{
+    std::random_device rd;
+    std::mt19937 g(rd());
+    std::shuffle(graph.begin(), graph.end(), g);
+
+    return graph;
 }
+
 float rand01(int resolution = 10000) 
 {
     return g_randomGenerator() % resolution / float(resolution); //basic, could be improved
@@ -65,8 +121,15 @@ void selection(std::vector<std::vector<int> > &population,std::vector<int> costs
 
 void mutate(std::vector<std::vector<int> > &population)
 {
-	//De facut
-	//******************************
+    std::uniform_real_distribution<double> unif(0, 1);
+    for (auto& cromozome : population) {
+        for (int i = 0; i < cromozome.size(); i++) {
+            if (unif(g_randomGenerator) < mutationChance) {
+                int id = g_randomGenerator() % cromozome.size();
+                std::swap(cromozome[i], cromozome[id]);
+            }
+        }
+    }
 }
 
 bool compare(std::pair<int,int> i, std::pair<int,int> j)
