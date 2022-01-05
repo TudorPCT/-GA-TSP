@@ -10,7 +10,8 @@
 #include <functional>
 #include <numeric>
 #include <string>
-#include<math.h>
+#include <math.h>
+#include <limits>
 
 std::mt19937_64 g_randomGenerator;
 float pi = 4 * atan(1);
@@ -62,7 +63,7 @@ std::vector<point> getData(std::string path)
     }
 
     input_file.close();
-	return graph;
+    return graph;
 }
 
 std::vector<point> generateRandomVector()
@@ -79,49 +80,49 @@ float rand01(int resolution = 10000)
     return g_randomGenerator() % resolution / float(resolution); //basic, could be improved
 }
 
-double evaluate(const std::vector<point> &cromozome)
+double evaluate(const std::vector<point>& cromozome)
 {
-	double cromCost = 0;
-	for(int i = 1; i < cromozome.size(); i++)
-		cromCost += sqrt(pow(cromozome[i].x-cromozome[i-1].x,2) + pow(cromozome[i].y-cromozome[i-1].y,2));
-	return cromCost;
+    double cromCost = 0;
+    for (int i = 1; i < cromozome.size(); i++)
+        cromCost += sqrt(pow(cromozome[i].x - cromozome[i - 1].x, 2) + pow(cromozome[i].y - cromozome[i - 1].y, 2));
+    return cromCost;
 }
 
-void selection(std::vector<std::vector<point> > &population,std::vector<double> costs, int k, int pressure, int popSize)
+void selection(std::vector<std::vector<point> >& population, std::vector<double> costs, int k, int pressure, int popSize)
 {
     const auto [minimum, maximum] = std::minmax_element(costs.begin(), costs.end());
     std::vector<int> F;
     double fs = 0;
-    for(int i = 0; i < costs.size(); i++)
+    for (int i = 0; i < costs.size(); i++)
     {
-        F.push_back(pow(((*maximum - costs[i]) / (*maximum - *minimum + 0.000001) + 0.01),   pressure));
+        F.push_back(pow(((*maximum - costs[i]) / (*maximum - *minimum + 0.000001) + 0.01), pressure));
         fs += F[i];
     }
     std::vector<double> pc;
-    pc.push_back(F[0]/fs);
-    for(int i = 1; i < F.size(); i++)
+    pc.push_back(F[0] / fs);
+    for (int i = 1; i < F.size(); i++)
     {
-        pc.push_back(F[i] / fs + pc[i-1]);
+        pc.push_back(F[i] / fs + pc[i - 1]);
     }
     std::vector<std::vector<point> > nextPop;
-    for(int i = 0; i < popSize - k; i++)
+    for (int i = 0; i < popSize - k; i++)
     {
         float r = rand01();
         bool chosen = false;
-        for(int j = 0; j < pc.size(); j++) {
+        for (int j = 0; j < pc.size(); j++) {
             if (r <= pc[j]) {
                 nextPop.push_back(population[j]);
                 chosen = true;
                 break;
             }
         }
-        if(chosen == false)
-            nextPop.push_back(population[population.size()-1]);
+        if (chosen == false)
+            nextPop.push_back(population[population.size() - 1]);
     }
     population = nextPop;
 }
 
-void mutate(std::vector<std::vector<point> > &population)
+void mutate(std::vector<std::vector<point> >& population)
 {
     std::uniform_real_distribution<double> unif(0, 1);
     for (auto& cromozome : population) {
@@ -134,22 +135,22 @@ void mutate(std::vector<std::vector<point> > &population)
     }
 }
 
-bool compare(std::pair<int,double> i, std::pair<int,double> j)
+bool compare(std::pair<int, double> i, std::pair<int, double> j)
 {
-	return i.second < j.second;
+    return i.second < j.second;
 }
 
-std::vector<point> cx(const std::vector<point>&c1, const std::vector<point>& c2)
+std::vector<point> cx(const std::vector<point>& c1, const std::vector<point>& c2)
 {
     std::vector<point> cromozome = c1;
-    std::vector<int> visited(c1.size(),0);
+    std::vector<int> visited(c1.size(), 0);
     int pos = 1 + g_randomGenerator() % (c1.size() - 3);
     for (int i = 0; i < pos; i++) {
-            visited[c1[i].id] = 1;
+        visited[c1[i].id] = 1;
     }
     int x = 0;
     for (int i = 0; i < c2.size(); i++)
-        if(visited[c2[i].id] == 0)
+        if (visited[c2[i].id] == 0)
         {
             cromozome[pos + x] = c2[i];
             x++;
@@ -157,81 +158,89 @@ std::vector<point> cx(const std::vector<point>&c1, const std::vector<point>& c2)
     return cromozome;
 }
 
-void crossover(std::vector<std::vector<point> > &population, int &popSize)
+void crossover(std::vector<std::vector<point> >& population, int& popSize)
 {
     std::vector<std::pair<int, double> > p;
     for (int i = 0; i < population.size(); i++)
         p.push_back(std::make_pair(i, rand01()));
     std::sort(p.begin(), p.end(), compare);
     int i = 0;
-    for (i = 0; i < p.size(); i+=2)
+    for (i = 0; i < p.size(); i += 2)
     {
-        if(i+1 == p.size() || p[i+1].second >= 0.6)
+        if (i + 1 == p.size() || p[i + 1].second >= 0.6)
             break;
-        auto x = cx(population[p[i].first],population[p[i+1].first]);
-        population.push_back(x);
+        auto x = cx(population[p[i].first], population[p[i + 1].first]);
+        population[p[i].first] = x;
 
     }
-    if(p[i].second < 0.6)
+    if (p[i].second < 0.6)
     {
         float r = rand01();
-        if(r >= 0.5) {
+        if (r >= 0.5) {
             auto x = cx(population[p[i].first], population[p[i + 1].first]);
-            population.push_back(x);
+            population[p[i].first] = x;
         }
     }
 }
 
-std::vector<std::vector<point> > elitism(const std::vector<std::vector<point> > &population, const std::vector<double> &costs, const int &k)
+std::vector<std::vector<point> > elitism(const std::vector<std::vector<point> >& population, const std::vector<double>& costs, const int& k)
 {
     std::vector<std::pair<int, double> > p;
     std::vector<std::vector<point> > elit;
-    for(int i = 0; i < costs.size(); i++)
+    for (int i = 0; i < costs.size(); i++)
     {
-        p.push_back(std::make_pair(i,costs[i]));
+        p.push_back(std::make_pair(i, costs[i]));
     }
     std::sort(p.begin(), p.end(), compare);
-    for(int i = 0; i < k; i++)
+    for (int i = 0; i < k; i++)
     {
         elit.push_back(population[p[i].first]);
     }
     return elit;
 }
 
-int ga(int &popSize, int &generations)
+double ga(int& popSize, int& generations)
 {
-    int k = int(popSize*0.07),pressure = 4;
+    int k = int(popSize * 0.07), pressure = 4;
     int t = 0;
-	std::vector<std::vector<point> > population;
-	std::vector<double> costs;
-    for(int i = 0; i < popSize; i++) {
-	   population.push_back(generateRandomVector());
-       costs.push_back(evaluate(population[i]));
+    std::vector<std::vector<point> > population;
+    std::vector<double> costs;
+    double minimG = std::numeric_limits<double>::max();
+    for (int i = 0; i < popSize; i++) {
+        population.push_back(generateRandomVector());
+        costs.push_back(evaluate(population[i]));
+        if (costs[i] < minimG) minimG = costs[i];
     }
-    while(t < generations) {
+    while (t < generations) {
         t++;
-        auto elit = elitism(population,costs,k);
+        auto elit = elitism(population, costs, k);
+        //std::cout << "HERE1\n";
         selection(population, costs, k, pressure, popSize);
+        //std::cout << "HERE2\n";
         mutate(population);
-        crossover(population,popSize);
-        for(int i = 0; i < elit.size(); i++)
+        crossover(population, popSize);
+        for (int i = 0; i < elit.size(); i++)
         {
             population.push_back(elit[i]);
         }
-	    for(int i = 0; i < population.size(); i++)
-	    {
-	        costs[i] = evaluate(population[i]);
-	    }
+        for (int i = 0; i < population.size(); i++)
+        {
+            costs[i] = evaluate(population[i]);
+            if (costs[i] < minimG) minimG = costs[i];
+        }
     }
-    const auto[minimum, maximum] = std::minmax_element(costs.begin(), costs.end());
-    return *minimum;
+    return minimG;
 }
 
-int main()
+int main(int argc, char* argv[])
 {
-	int popSize = 200, generations = 2000;
-	getData("bays.tsp");
-    auto x = ga(popSize,generations);
+    std::string instance;
+    if (argc > 1) {
+        instance = argv[1];
+    }
+    int popSize = 200, generations = 2000;
+    getData(instance);
+    auto x = ga(popSize, generations);
     std::cout << x;
-	return 0;
+    return 0;
 }
