@@ -168,10 +168,10 @@ std::vector<point> cx(const std::vector<point>& c1, const std::vector<point>& c2
     return cromozome;
 }
 
-void crossover(std::vector<std::vector<point>>& population)
+void crossover(std::vector<std::vector<point> >& population)
 {
     std::uniform_real_distribution<double> unif(0, 1);
-    std::vector<std::pair<int, double>> p;
+    std::vector<std::pair<int, double> > p;
     for (int i = 0; i < population.size(); i++)
         p.push_back(std::make_pair(i, unif(g_randomGenerator)));
     std::stable_sort(p.begin(), p.end(), compare);
