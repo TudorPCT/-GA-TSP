@@ -89,8 +89,10 @@ float rand01(int resolution = 10000)
 double evaluate(const std::vector<point>& cromozome)
 {
     double cromCost = 0;
+    int n = cromozome.size();
     for (int i = 1; i < cromozome.size(); i++)
         cromCost += sqrt(pow(cromozome[i].x - cromozome[i - 1].x, 2) + pow(cromozome[i].y - cromozome[i - 1].y, 2));
+    cromCost += sqrt(pow(cromozome[n-1].x - cromozome[0].x, 2) + pow(cromozome[n-1].y - cromozome[0].y, 2));
     return cromCost;
 }
 
@@ -101,7 +103,8 @@ void selection(std::vector<std::vector<point> >& population, const std::vector<d
     double fs = 0;
     for (int i = 0; i < costs.size(); i++)
     {
-        fitness.push_back(pow(((*maximum - costs[i]) / (*maximum - *minimum + 0.000001) + 0.01), pressure));
+        //fitness.push_back(pow(((*maximum - costs[i]) / (*maximum - *minimum + 0.000001) + 1), pressure));
+        fitness.push_back((double)(1 / costs[i]));
         fs += fitness[i];
     }
     std::vector<double> pc;
@@ -199,23 +202,23 @@ std::vector<std::vector<point> > elitism(const std::vector<std::vector<point> >&
     {
         p.push_back(std::make_pair(i, costs[i]));
     }
-    std::cout << "HERE1\n";
+    //std::cout << "HERE1\n";
 
     std::stable_sort(p.begin(), p.end(), compare);
-    std::cout << "HERE2\n";
+    //std::cout << "HERE2\n";
 
     for (int i = 0; i < k; i++)
     {
         elit.push_back(population[p[i].first]);
     }
-    std::cout << "HERE3\n";
+    //std::cout << "HERE3\n";
 
     return elit;
 }
 
 double ga(const int& popSize, const int& generations)
 {
-    int k = int(popSize * 0.01), pressure = 2;
+    int k = int(popSize * 0.1), pressure = 4;
     int t = 0;
     std::vector<std::vector<point> > population;
     std::vector<double> costs;
