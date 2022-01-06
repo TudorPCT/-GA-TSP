@@ -44,15 +44,21 @@ std::vector<point> getData(std::string path)
         while (line[i] == ' ') i++;
         while (line[i] != ' ')
             id_str += line[i++];
-        i++;
         vertex.id = atoi(id_str.c_str()) - 1;
         std::string x_str, y_str;
+        i++;
+        while (line[i] == ' ') {
+            i++;
+        }
         while (line[i] != ' ') {
             x_str += line[i++];
         }
         vertex.x = atof(x_str.c_str());
         i++;
 
+        while (line[i] == ' ') {
+            i++;
+        }
         while (i < line.size()) {
             y_str += line[i++];
         }
@@ -137,7 +143,7 @@ void mutate(std::vector<std::vector<point> >& population)
 
 bool compare(std::pair<int, double> i, std::pair<int, double> j)
 {
-    return i.second <= j.second;
+    return i.second < j.second;
 }
 
 std::vector<point> cx(const std::vector<point>& c1, const std::vector<point>& c2)
@@ -165,7 +171,7 @@ void crossover(std::vector<std::vector<point>>& population)
     std::vector<std::pair<int, double>> p;
     for (int i = 0; i < population.size(); i++)
         p.push_back(std::make_pair(i, unif(g_randomGenerator)));
-    std::sort(p.begin(), p.end(), compare);
+    std::stable_sort(p.begin(), p.end(), compare);
     int i = 0;
     for (i = 0; i < p.size(); i += 2)
     {
@@ -193,11 +199,17 @@ std::vector<std::vector<point> > elitism(const std::vector<std::vector<point> >&
     {
         p.push_back(std::make_pair(i, costs[i]));
     }
-    std::sort(p.begin(), p.end(), compare);
+    std::cout << "HERE1\n";
+
+    std::stable_sort(p.begin(), p.end(), compare);
+    std::cout << "HERE2\n";
+
     for (int i = 0; i < k; i++)
     {
         elit.push_back(population[p[i].first]);
     }
+    std::cout << "HERE3\n";
+
     return elit;
 }
 
@@ -216,9 +228,16 @@ double ga(const int& popSize, const int& generations)
     while (t < generations) {
         t++;
         auto elit = elitism(population, costs, k);
+        //std::cout << "HERE1\n";
         selection(population, costs, pressure, popSize);
+        //std::cout << "HERE2\n";
+
         mutate(population);
+        //std::cout << "HERE3\n";
+
         crossover(population);
+        //std::cout << "HERE4\n";
+
         for (int i = 0; i < elit.size(); i++)
         {
             population.push_back(elit[i]);
@@ -229,12 +248,15 @@ double ga(const int& popSize, const int& generations)
             costs.push_back(evaluate(population[i]));
             if (costs[i] < minimG) minimG = costs[i];
         }
+        //std::cout << "HERE5\n";
+
     }
     return minimG;
 }
 
 int main(int argc, char* argv[])
 {
+    auto start = std::chrono::steady_clock::now();
     std::string instance;
     if (argc > 1) {
         instance = argv[1];
@@ -242,6 +264,10 @@ int main(int argc, char* argv[])
     int popSize = 200, generations = 2000;
     getData(instance);
     auto x = ga(popSize, generations);
-    std::cout << x;
+    //auto x = generateRandomVector();
+    auto end = std::chrono::steady_clock::now();
+    std::cout << x << "\n";
+    std::cout << "Elapsed time in miliseconds: " << (double)std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms\n";
+    std::cout << "Elapsed time in seconds: " << (double)std::chrono::duration_cast<std::chrono::seconds>(end - start).count() << " sec\n";
     return 0;
 }
