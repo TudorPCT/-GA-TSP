@@ -15,7 +15,7 @@
 
 std::mt19937_64 g_randomGenerator;
 float pi = 4 * atan(1);
-double mutationChance = 0.008;
+double mutationChance = 0.01;
 
 struct point {
     int id;
@@ -104,7 +104,7 @@ void selection(std::vector<std::vector<point> >& population, const std::vector<d
     for (int i = 0; i < costs.size(); i++)
     {
         //fitness.push_back(pow(((*maximum - costs[i]) / (*maximum - *minimum + 0.000001) + 1), pressure));
-        fitness.push_back((double)(1 / costs[i]));
+        fitness.push_back(pow(((double)(1 / costs[i])),pressure));
         fs += fitness[i];
     }
     std::vector<double> pc;
@@ -131,19 +131,53 @@ void selection(std::vector<std::vector<point> >& population, const std::vector<d
     population = nextPop;
 }
 
+int findcity(std::vector<point> &cromozome, point &candidate)
+{
+	double minim = std::numeric_limits<double>::max();
+	int result;
+	for(int i = 0; i < cromozome.size(); i++)
+	{
+		if(cromozome[i].id == candidate.id)
+			continue;
+		double x = sqrt(pow(cromozome[i].x - candidate.x, 2) + pow(cromozome[i].y - candidate.y, 2));
+		if(x < minim){
+			minim = x;
+		 	result = i;
+		}
+	}
+	return result;
+}
+
 void mutate(std::vector<std::vector<point> >& population)
 {
-    std::uniform_real_distribution<double> unif(0, 1);
+	
+	/*std::uniform_real_distribution<double> unif(0, 1);
     for (auto& cromozome : population) {
-        for (int i = 0; i < cromozome.size(); i++) {
-            if (unif(g_randomGenerator) < mutationChance) {
-                int id = g_randomGenerator() % cromozome.size();
+    	for (int i = 0; i < cromozome.size(); i++) {
+        	if (unif(g_randomGenerator) < mutationChance) {
+            	int id = g_randomGenerator() % cromozome.size();
                 std::swap(cromozome[i], cromozome[id]);
-            }
-        }
-    }
-    
-    /*	for (auto& cromozome : population) {
+             }
+         }
+	}*/
+	
+	std::uniform_real_distribution<double> unif(0, 1);
+    for (auto& cromozome : population) {
+    	for (int it = 0; it < cromozome.size(); it++) {
+        	if (unif(g_randomGenerator) < mutationChance) {
+				int i = g_randomGenerator() % cromozome.size();
+				int j = g_randomGenerator() % cromozome.size();
+				if(i > j)
+					std::swap(i,j);
+		        for (i++ ; i < j; i++ && j--) {
+		        	std::swap(cromozome[i],cromozome[j]);
+		        }
+				
+         	}
+		}
+	}
+	
+/*	{ //slide
 		int i = g_randomGenerator() % cromozome.size();
 		int j = g_randomGenerator() % cromozome.size();
 		if(i > j)
@@ -153,7 +187,7 @@ void mutate(std::vector<std::vector<point> >& population)
         }
     }
        
-	for (auto& cromozome : population) {
+	{ //invertion
 		int i = g_randomGenerator() % cromozome.size();
 		int j = g_randomGenerator() % cromozome.size();
 		if(i > j)
@@ -162,7 +196,7 @@ void mutate(std::vector<std::vector<point> >& population)
         	std::swap(cromozome[i],cromozome[j]);
         }
     }
-	for (auto& cromozome : population) {
+	{ //IRGIBNNM
 		int i = g_randomGenerator() % cromozome.size();
 		int j = g_randomGenerator() % cromozome.size();
 		if(i > j)
@@ -259,7 +293,7 @@ std::vector<std::vector<point> > elitism(const std::vector<std::vector<point> >&
 
 double ga(const int& popSize, const int& generations)
 {
-    int k = int(popSize * 0.1), pressure = 4;
+	int k = int(popSize * 0.1),pressure = 1;
     int t = 0;
     std::vector<std::vector<point> > population;
     std::vector<double> costs;
@@ -307,10 +341,16 @@ int main(int argc, char* argv[])
     }
     int popSize = 200, generations = 2000;
     getData(instance);
-    auto x = ga(popSize, generations);
+    double x;
+	int i = 0;
+	while(i < 5)
+	{ 
+		x += ga(popSize, generations);
+		i++;
+	}
+	std::cout << x / i;
     //auto x = generateRandomVector();
     auto end = std::chrono::steady_clock::now();
-    std::cout << x << "\n";
     std::cout << "Elapsed time in miliseconds: " << (double)std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms\n";
     std::cout << "Elapsed time in seconds: " << (double)std::chrono::duration_cast<std::chrono::seconds>(end - start).count() << " sec\n";
     return 0;
