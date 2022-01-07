@@ -24,6 +24,14 @@ struct point {
 
 std::vector<point> graph;
 
+void initRandomGenerator(long int additional = 0) {
+    std::mt19937_64 initialiser;
+    unsigned long int thisSeed = static_cast<long unsigned int>(std::chrono::high_resolution_clock::now().time_since_epoch().count()) + additional;
+    initialiser.seed(thisSeed);
+    initialiser.discard(10000);
+    g_randomGenerator.seed(initialiser());
+}
+
 std::vector<point> getData(std::string path)
 {
     std::ifstream input_file(path);
@@ -74,9 +82,9 @@ std::vector<point> getData(std::string path)
 
 std::vector<point> generateRandomVector()
 {
-    std::random_device rd;
-    std::mt19937 g(rd());
-    std::shuffle(graph.begin(), graph.end(), g);
+    /*std::random_device rd;
+    std::mt19937 g(rd());*/
+    std::shuffle(graph.begin(), graph.end(), g_randomGenerator);
 
     return graph;
 }
@@ -296,11 +304,15 @@ double ga(const int& popSize, const int& generations)
     int t = 0;
     std::vector<std::vector<point> > population;
     std::vector<double> costs;
+    std::vector<point> best;
     double minimG = std::numeric_limits<double>::max();
     for (int i = 0; i < popSize; i++) {
         population.push_back(generateRandomVector());
         costs.push_back(evaluate(population[i]));
-        if (costs[i] < minimG) minimG = costs[i];
+        if (costs[i] < minimG) {
+            minimG = costs[i];
+            best = population[i];
+        }
     }
     while (t < generations) {
         t++;
@@ -325,12 +337,17 @@ double ga(const int& popSize, const int& generations)
             costs.push_back(evaluate(population[i]));
             if (costs[i] < minimG) {
                 minimG = costs[i];
-                //std::cout << t << "-" << minimG << "\n";
+                best = population[i];
+               // std::cout << t << "-" << minimG << "\n";
             }
         }
         //std::cout << "HERE5\n";
 
     }
+    for (auto vertex : best) {
+        std::cout << vertex.id << " ";
+    }
+    std::cout << minimG << "\n";
     return minimG;
 }
 
@@ -338,10 +355,15 @@ int main(int argc, char* argv[])
 {
     auto start = std::chrono::steady_clock::now();
     std::string instance;
+    long additional;
     if (argc > 1) {
         instance = argv[1];
     }
+    if (argc > 2) {
+        additional = atol(argv[2]);
+    }
     int popSize = 200, generations = 2000;
+    initRandomGenerator(additional);
     getData(instance);
     double x;
 	int i = 0;
