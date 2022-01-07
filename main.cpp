@@ -142,6 +142,47 @@ void mutate(std::vector<std::vector<point> >& population)
             }
         }
     }
+    
+    /*	for (auto& cromozome : population) {
+		int i = g_randomGenerator() % cromozome.size();
+		int j = g_randomGenerator() % cromozome.size();
+		if(i > j)
+			std::swap(i,j);
+        for (i++ ; i < j; i++) {
+        	std::swap(cromozome[i],cromozome[i+1]);
+        }
+    }
+       
+	for (auto& cromozome : population) {
+		int i = g_randomGenerator() % cromozome.size();
+		int j = g_randomGenerator() % cromozome.size();
+		if(i > j)
+			std::swap(i,j);
+        for (i++ ; i < j; i++ && j--) {
+        	std::swap(cromozome[i],cromozome[j]);
+        }
+    }
+	for (auto& cromozome : population) {
+		int i = g_randomGenerator() % cromozome.size();
+		int j = g_randomGenerator() % cromozome.size();
+		if(i > j)
+			std::swap(i,j);
+        for (i++ ; i < j; i++ && j--) {
+        	std::swap(cromozome[i],cromozome[j]);
+        }
+		
+		i = g_randomGenerator() % cromozome.size(); 
+		j = findcity(cromozome,cromozome[i]);
+		int z = g_randomGenerator() % 6;
+		int y = pow(-1,(g_randomGenerator() % 2 + 1));
+		if(z * y < 0)
+			z = 0;
+		else if(z * y >= cromozome.size())
+			z = cromozome.size() - 1;
+		else 
+			z = z * y;
+		std::swap(cromozome[i],cromozome[z]);
+	}*/
 }
 
 bool compare(std::pair<int, double> i, std::pair<int, double> j)
