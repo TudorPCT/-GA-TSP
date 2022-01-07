@@ -15,7 +15,7 @@
 
 std::mt19937_64 g_randomGenerator;
 float pi = 4 * atan(1);
-double mutationChance = 0.01, crossChance = 0.8;
+double mutationChance = 0.008, crossChance = 0.8;
 
 struct point {
     int id;
@@ -163,60 +163,59 @@ void mutate(std::vector<std::vector<point> >& population)
 	
 	std::uniform_real_distribution<double> unif(0, 1);
     for (auto& cromozome : population) {
-    	for (int it = 0; it < cromozome.size(); it++) {
-        	if (unif(g_randomGenerator) < mutationChance) {
-				int i = g_randomGenerator() % cromozome.size();
-				int j = g_randomGenerator() % cromozome.size();
-				if(i > j)
-					std::swap(i,j);
-		        for (i++ ; i < j; i++ && j--) {
-		        	std::swap(cromozome[i],cromozome[j]);
-		        }
-				
-         	}
-		}
-	}
-	
-/*	{ //slide
-		int i = g_randomGenerator() % cromozome.size();
-		int j = g_randomGenerator() % cromozome.size();
-		if(i > j)
-			std::swap(i,j);
-        for (i++ ; i < j; i++) {
-        	std::swap(cromozome[i],cromozome[i+1]);
+        for (int it = 0; it < cromozome.size(); it++) {
+            if (unif(g_randomGenerator) < mutationChance) {
+                int i = g_randomGenerator() % cromozome.size();
+                int j = g_randomGenerator() % cromozome.size();
+                if (i > j)
+                    std::swap(i, j);
+                for (i++; i < j; i++ && j--) {
+                    std::swap(cromozome[i], cromozome[j]);
+                }
+
+
+                //slide
+               /* i = g_randomGenerator() % cromozome.size();
+                j = g_randomGenerator() % cromozome.size();*/
+                /*if (i > j)
+                    std::swap(i, j);
+                for (i++; i < j; i++) {
+                    std::swap(cromozome[i], cromozome[i + 1]);
+                }*/
+
+
+                //invertion
+               /* i = g_randomGenerator() % cromozome.size();
+                j = g_randomGenerator() % cromozome.size();
+                if (i > j)
+                    std::swap(i, j);
+                for (i++; i < j; i++ && j--) {
+                    std::swap(cromozome[i], cromozome[j]);
+                }*/
+
+                //IRGIBNNM
+                /*i = g_randomGenerator() % cromozome.size();
+                j = g_randomGenerator() % cromozome.size();
+                if (i > j)
+                    std::swap(i, j);
+                for (i++; i < j; i++ && j--) {
+                    std::swap(cromozome[i], cromozome[j]);
+                }
+
+                i = g_randomGenerator() % cromozome.size();
+                j = findcity(cromozome, cromozome[i]);
+                int z = g_randomGenerator() % 6;
+                int y = pow(-1, (g_randomGenerator() % 2 + 1));
+                if (z * y < 0)
+                    z = 0;
+                else if (z * y >= cromozome.size())
+                    z = cromozome.size() - 1;
+                else
+                    z = z * y;
+                std::swap(cromozome[i], cromozome[z]);*/
+            }
         }
     }
-       
-	{ //invertion
-		int i = g_randomGenerator() % cromozome.size();
-		int j = g_randomGenerator() % cromozome.size();
-		if(i > j)
-			std::swap(i,j);
-        for (i++ ; i < j; i++ && j--) {
-        	std::swap(cromozome[i],cromozome[j]);
-        }
-    }
-	{ //IRGIBNNM
-		int i = g_randomGenerator() % cromozome.size();
-		int j = g_randomGenerator() % cromozome.size();
-		if(i > j)
-			std::swap(i,j);
-        for (i++ ; i < j; i++ && j--) {
-        	std::swap(cromozome[i],cromozome[j]);
-        }
-		
-		i = g_randomGenerator() % cromozome.size(); 
-		j = findcity(cromozome,cromozome[i]);
-		int z = g_randomGenerator() % 6;
-		int y = pow(-1,(g_randomGenerator() % 2 + 1));
-		if(z * y < 0)
-			z = 0;
-		else if(z * y >= cromozome.size())
-			z = cromozome.size() - 1;
-		else 
-			z = z * y;
-		std::swap(cromozome[i],cromozome[z]);
-	}*/
 }
 
 bool compare(std::pair<int, double> i, std::pair<int, double> j)
@@ -293,7 +292,7 @@ std::vector<std::vector<point> > elitism(const std::vector<std::vector<point> >&
 
 double ga(const int& popSize, const int& generations)
 {
-	int k = int(popSize * 0.1),pressure = 1;
+	int k = int(popSize * 0.1),pressure = 4;
     int t = 0;
     std::vector<std::vector<point> > population;
     std::vector<double> costs;
@@ -351,7 +350,7 @@ int main(int argc, char* argv[])
 		x += ga(popSize, generations);
 		i++;
 	}
-	std::cout << x / i;
+	std::cout << x / i << "\n";
     //auto x = generateRandomVector();
     auto end = std::chrono::steady_clock::now();
     std::cout << "Elapsed time in miliseconds: " << (double)std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms\n";
