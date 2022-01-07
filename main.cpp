@@ -15,7 +15,7 @@
 
 std::mt19937_64 g_randomGenerator;
 float pi = 4 * atan(1);
-double mutationChance = 0.01;
+double mutationChance = 0.01, crossChance = 0.8;
 
 struct point {
     int id;
@@ -253,13 +253,13 @@ void crossover(std::vector<std::vector<point> >& population)
     int i = 0;
     for (i = 0; i < p.size(); i += 2)
     {
-        if (i + 1 == p.size() || p[i + 1].second >= 0.8)
+        if (i + 1 == p.size() || p[i + 1].second >= crossChance)
             break;
         auto x = cx(population[p[i].first], population[p[i + 1].first]);
         population.push_back(x);
 
     }
-    if (p[i].second < 0.8)
+    if (p[i].second < crossChance)
     {
         float r = unif(g_randomGenerator);
         if (r < 0.5) {
@@ -324,7 +324,10 @@ double ga(const int& popSize, const int& generations)
         for (int i = 0; i < population.size(); i++)
         {
             costs.push_back(evaluate(population[i]));
-            if (costs[i] < minimG) minimG = costs[i];
+            if (costs[i] < minimG) {
+                minimG = costs[i];
+                //std::cout << t << "-" << minimG << "\n";
+            }
         }
         //std::cout << "HERE5\n";
 
