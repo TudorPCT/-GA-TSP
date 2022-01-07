@@ -15,7 +15,7 @@
 
 std::mt19937_64 g_randomGenerator;
 float pi = 4 * atan(1);
-double mutationChance = 0.008, crossChance = 0.8;
+double mutationChance = 0.1, crossChance = 0.8;
 
 struct point {
     int id;
@@ -111,8 +111,8 @@ void selection(std::vector<std::vector<point> >& population, const std::vector<d
     double fs = 0;
     for (int i = 0; i < costs.size(); i++)
     {
-        //fitness.push_back(pow(((*maximum - costs[i]) / (*maximum - *minimum + 0.000001) + 1), pressure));
-        fitness.push_back(pow(((double)(1 / costs[i])),pressure));
+        fitness.push_back(pow(((*maximum - costs[i]) / (*maximum - *minimum + 0.000001) + 1), pressure));
+        //fitness.push_back(pow(((double)(1 / costs[i])),pressure));
         fs += fitness[i];
     }
     std::vector<double> pc;
@@ -156,7 +156,51 @@ int findcity(std::vector<point> &cromozome, point &candidate)
 	return result;
 }
 
-void mutate(std::vector<std::vector<point> >& population)
+std::vector<point> invert(std::vector<point> cromozome)
+{
+	int i = g_randomGenerator() % cromozome.size();
+	int j = g_randomGenerator() % cromozome.size();
+	if (i > j)
+    std::swap(i, j);
+	i++;
+	for (; i < j; i++ && j--)
+		std::swap(cromozome[i], cromozome[j]);
+	return cromozome;
+}
+
+std::vector<point> rgibnnm(std::vector<point> cromozome)
+{
+	int i = g_randomGenerator() % cromozome.size();
+	int j = findcity(cromozome, cromozome[i]);
+	int z = g_randomGenerator() % 11 - 5;
+	if (j + z < 0)
+	    j = 0;
+	else if (j + z >= cromozome.size())
+		j = cromozome.size() - 1;
+	else j += z;
+	std::swap(cromozome[i], cromozome[j]);
+	return cromozome;
+}
+
+std::vector<point> slide(std::vector<point> cromozome)
+{
+	int i = g_randomGenerator() % cromozome.size();
+	int j = g_randomGenerator() % cromozome.size();
+	if (i > j)
+	  	std::swap(i, j);
+	for (i++; i < j; i++) 
+		std::swap(cromozome[i], cromozome[i + 1]);
+	return cromozome;
+}
+
+std::vector<point> irgibnnm(std::vector<point> cromozome)
+{
+	cromozome = invert(cromozome);
+	cromozome = rgibnnm(cromozome);
+	return cromozome;
+}
+
+void mutate(std::vector<std::vector<point> >& population,std::vector<double> costs)
 {
 	
 	/*std::uniform_real_distribution<double> unif(0, 1);
@@ -170,60 +214,21 @@ void mutate(std::vector<std::vector<point> >& population)
 	}*/
 	
 	std::uniform_real_distribution<double> unif(0, 1);
-    for (auto& cromozome : population) {
-        for (int it = 0; it < cromozome.size(); it++) {
-            if (unif(g_randomGenerator) < mutationChance) {
-                int i = g_randomGenerator() % cromozome.size();
-                int j = g_randomGenerator() % cromozome.size();
-                if (i > j)
-                    std::swap(i, j);
-                for (i++; i < j; i++ && j--) {
-                    std::swap(cromozome[i], cromozome[j]);
-                }
-
-
-                //slide
-               /* i = g_randomGenerator() % cromozome.size();
-                j = g_randomGenerator() % cromozome.size();*/
-                /*if (i > j)
-                    std::swap(i, j);
-                for (i++; i < j; i++) {
-                    std::swap(cromozome[i], cromozome[i + 1]);
-                }*/
-
-
-                //invertion
-               /* i = g_randomGenerator() % cromozome.size();
-                j = g_randomGenerator() % cromozome.size();
-                if (i > j)
-                    std::swap(i, j);
-                for (i++; i < j; i++ && j--) {
-                    std::swap(cromozome[i], cromozome[j]);
-                }*/
-
-                //IRGIBNNM
-                /*i = g_randomGenerator() % cromozome.size();
-                j = g_randomGenerator() % cromozome.size();
-                if (i > j)
-                    std::swap(i, j);
-                for (i++; i < j; i++ && j--) {
-                    std::swap(cromozome[i], cromozome[j]);
-                }
-
-                i = g_randomGenerator() % cromozome.size();
-                j = findcity(cromozome, cromozome[i]);
-                int z = g_randomGenerator() % 6;
-                int y = pow(-1, (g_randomGenerator() % 2 + 1));
-                if (z * y < 0)
-                    z = 0;
-                else if (z * y >= cromozome.size())
-                    z = cromozome.size() - 1;
-                else
-                    z = z * y;
-                std::swap(cromozome[i], cromozome[z]);*/
-            }
-        }
-    }
+    for (auto& cromozome : population) 
+    	if (unif(g_randomGenerator) < mutationChance) {
+			auto x = irgibnnm(cromozome);
+			auto y = invert(cromozome);
+			auto z = slide(cromozome);
+			auto xc = evaluate(x);
+			auto yc = evaluate(y);
+			auto zc = evaluate(z);
+			if(xc < yc && xc < zc)
+				cromozome = x;
+			else if(yc < xc && yc < zc)
+				cromozome = y;
+			else cromozome = z;
+		
+	}
 }
 
 bool compare(std::pair<int, double> i, std::pair<int, double> j)
@@ -304,15 +309,11 @@ double ga(const int& popSize, const int& generations)
     int t = 0;
     std::vector<std::vector<point> > population;
     std::vector<double> costs;
-    std::vector<point> best;
     double minimG = std::numeric_limits<double>::max();
     for (int i = 0; i < popSize; i++) {
         population.push_back(generateRandomVector());
         costs.push_back(evaluate(population[i]));
-        if (costs[i] < minimG) {
-            minimG = costs[i];
-            best = population[i];
-        }
+        if (costs[i] < minimG) minimG = costs[i];
     }
     while (t < generations) {
         t++;
@@ -321,7 +322,7 @@ double ga(const int& popSize, const int& generations)
         selection(population, costs, pressure, popSize);
         //std::cout << "HERE2\n";
 
-        mutate(population);
+        mutate(population,costs);
         //std::cout << "HERE3\n";
 
         crossover(population);
@@ -337,17 +338,12 @@ double ga(const int& popSize, const int& generations)
             costs.push_back(evaluate(population[i]));
             if (costs[i] < minimG) {
                 minimG = costs[i];
-                best = population[i];
-               // std::cout << t << "-" << minimG << "\n";
+                //std::cout << t << "-" << minimG << "\n";
             }
         }
         //std::cout << "HERE5\n";
 
     }
-    for (auto vertex : best) {
-        std::cout << vertex.id << " ";
-    }
-    std::cout << minimG << "\n";
     return minimG;
 }
 
@@ -355,15 +351,10 @@ int main(int argc, char* argv[])
 {
     auto start = std::chrono::steady_clock::now();
     std::string instance;
-    long additional;
     if (argc > 1) {
         instance = argv[1];
     }
-    if (argc > 2) {
-        additional = atol(argv[2]);
-    }
     int popSize = 200, generations = 2000;
-    initRandomGenerator(additional);
     getData(instance);
     double x;
 	int i = 0;
